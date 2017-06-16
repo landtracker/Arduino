@@ -10,9 +10,12 @@ int servo = 0;
 int angulo = 0;
 bool flag = true;
 
-const byte interruptPin = 2;
+
 int c = 0;
-long lastInterruptTime = 0;
+unsigned long Rdistance = 0;
+unsigned long Tdistance = 0;
+
+unsigned long lastInterruptTime = 0;
 unsigned long duration = 0;
 unsigned long velocity = 0;
 
@@ -31,6 +34,8 @@ void setup() {
   servo1.myservo.attach(SERVOPIN_01);
   servo2.myservo.attach(SERVOPIN_02);
   servo3.myservo.attach(SERVOPIN_03);
+  pinMode(SIGPIN_PI_R, INPUT_PULLUP);
+  pinMode(SIGPIN_PI_S, INPUT_PULLUP);
 
 
   Wire.begin(SLAVE_ADDRESS);
@@ -43,8 +48,8 @@ void setup() {
   Wire.onRequest(sendData);
   Serial.println("Ready!");
 
-  pinMode(interruptPin, INPUT_PULLUP);
-  attachInterrupt(interruptPin - 2, count, FALLING);
+  pinMode(INTPIN, INPUT_PULLUP);
+  attachInterrupt(INTPIN - 2, count, FALLING);
 
 
 }
@@ -52,19 +57,19 @@ void setup() {
 void loop()
 {
 
+  while (SIGPIN_PI_R){
+    
+  }
+  
   delay(10);
   Serial.println((int)velocity);
   Serial.println(duration);
-  if (c > 5)
-  {
-    c = 0;
-    duration = millis() - lastInterruptTime;
-    lastInterruptTime = millis();
 
-  }
   if ((millis() - lastInterruptTime) > 1000)
     duration = 0;
-
+  else
+    duration = millis() - lastInterruptTime;
+    
    velocity = calcVelocity(duration);
 
 }
@@ -82,7 +87,7 @@ void receiveData(int byteCount) {
 
 
   Serial.println("Entrando na receiveData");
-
+  
 
 
   while (Wire.available()) {
@@ -211,6 +216,8 @@ void sendData() {
 void count() 
 {
   c++;
+  Rdistance++;
+  lastInterruptTime = millis();
 
 }
 
