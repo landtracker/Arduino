@@ -10,6 +10,13 @@ int servo = 0;
 int angulo = 0;
 bool flag = true;
 
+const byte interruptPin = 2;
+int c = 0;
+long lastInterruptTime = 0;
+unsigned long duration = 0;
+unsigned long velocity = 0;
+
+
 
 //Objeto Sonar
 ServoMotor servo1(SERVOPIN_01);
@@ -36,6 +43,9 @@ void setup() {
   Wire.onRequest(sendData);
   Serial.println("Ready!");
 
+  pinMode(interruptPin, INPUT_PULLUP);
+  attachInterrupt(interruptPin - 2, count, FALLING);
+
 
 }
 
@@ -43,6 +53,28 @@ void loop()
 {
 
   delay(10);
+  Serial.println((int)velocity);
+  Serial.println(duration);
+  if (c > 5)
+  {
+    c = 0;
+    duration = millis() - lastInterruptTime;
+    lastInterruptTime = millis();
+
+  }
+  if ((millis() - lastInterruptTime) > 1000)
+    duration = 0;
+
+   velocity = calcVelocity(duration);
+
+}
+
+unsigned long calcVelocity (unsigned long dur)
+{
+  if (duration != 0)
+    return (2*PI*6)/dur*1000;
+  else
+    return 0;
 }
 
 void receiveData(int byteCount) {
@@ -56,41 +88,45 @@ void receiveData(int byteCount) {
   while (Wire.available()) {
     Serial.println("Entrando no while da receiveData");
 
-    if(flag)
+    if (flag)
     {
 
-          servo = Wire.read();     
-           
-      
-          Serial.println("Servo requerido");
-          Serial.println(servo);
+      servo = Wire.read();
 
-          if(servo > 0 & servo <4)
-          {
-             flag = false;
-          }
 
-          else{flag = true;}
-      
+      Serial.println("Servo requerido");
+      Serial.println(servo);
+
+      if (servo > 0 & servo < 4)
+      {
+        flag = false;
+      }
+
+      else {
+        flag = true;
+      }
+
     }
 
-    else 
+    else
     {
 
 
-            angulo = Wire.read();             
-        
-            Serial.println("Angulo Selecionado");
-            Serial.println(angulo);
-            
-            if(angulo >= 0 & angulo <= 180)
-              {
-                 flag = true;
-                 setServo();
-              }
-    
-              else
-              {flag = false;}      
+      angulo = Wire.read();
+
+      Serial.println("Angulo Selecionado");
+      Serial.println(angulo);
+
+      if (angulo >= 0 & angulo <= 180)
+      {
+        flag = true;
+        setServo();
+      }
+
+      else
+      {
+        flag = false;
+      }
     }
 
   }
@@ -100,77 +136,84 @@ void receiveData(int byteCount) {
 void setServo() {
 
 
-   if (servo > 0 & servo < 4)
+  if (servo > 0 & servo < 4)
+  {
+
+    if (servo == 1)
     {
 
-      if (servo == 1)
+      if (angulo >= 0 & angulo <= 180)
       {
-
-        if (angulo >= 0 & angulo <=180)
-        {
-          servo1.setAngle(angulo);
-          Serial.println("Servo 1 selecionado");  
-        }
-
-        else
-        {
-          angulo = -1;
-        }
+        servo1.setAngle(angulo);
+        Serial.println("Servo 1 selecionado");
       }
 
-      else if (servo == 2)
+      else
       {
-
-        if (angulo >= 0 & angulo <= 180)
-        {
-          servo2.setAngle(angulo);
-          Serial.println("Servo 2 selecionado");  
-        }
-
-        else
-        {
-          angulo = -1;
-        }
-      }
-
-      else if (servo == 3)
-      {
-
-        if (angulo >= 0 & angulo <= 180)
-        {
-          servo3.setAngle(angulo);
-          Serial.println("Servo 3 selecionado");            
-
-        }
-
-        else
-        {
-          angulo = -1;
-        }
+        angulo = -1;
       }
     }
 
-    else
+    else if (servo == 2)
     {
-      servo = -1;
+
+      if (angulo >= 0 & angulo <= 180)
+      {
+        servo2.setAngle(angulo);
+        Serial.println("Servo 2 selecionado");
+      }
+
+      else
+      {
+        angulo = -1;
+      }
+    }
+
+    else if (servo == 3)
+    {
+
+      if (angulo >= 0 & angulo <= 180)
+      {
+        servo3.setAngle(angulo);
+        Serial.println("Servo 3 selecionado");
+
+      }
+
+      else
+      {
+        angulo = -1;
+      }
     }
   }
+
+  else
+  {
+    servo = -1;
+  }
+}
 
 
 
 // callback for sending data
 void sendData() {
 
-  if(!flag)
-  {
-      Wire.write(servo);
 
-  }
+  Wire.write((int)velocity);
 
-  else 
-  {
 
-    Wire.write(angulo);
-  }
+
+
 
 }
+
+
+
+void count() 
+{
+  c++;
+
+}
+
+
+
+
