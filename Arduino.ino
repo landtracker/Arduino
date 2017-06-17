@@ -8,7 +8,8 @@
 
 int servo = 0;
 int angulo = 0;
-bool flag = true;
+bool instFlag = false;
+int instruction = 0;
 
 
 int c = 0;
@@ -44,7 +45,6 @@ void setup() {
   // define callbacks for i2c communication
   //Wire.onReceive(receiveData);
   Wire.onReceive(receiveData);
-
   Wire.onRequest(sendData);
   Serial.println("Ready!");
 
@@ -56,9 +56,12 @@ void setup() {
 
 void loop()
 {
-
+  //Serial.println(SIGPIN_PI_R);
+  
   while (SIGPIN_PI_R){
-    
+    Serial.println(servo);
+    Serial.println(Tdistance);
+    delay(1000);
   }
   
   delay(10);
@@ -84,57 +87,22 @@ unsigned long calcVelocity (unsigned long dur)
 
 void receiveData(int byteCount) {
 
-
-
-  Serial.println("Entrando na receiveData");
-  
-
-
+ 
   while (Wire.available()) {
-    Serial.println("Entrando no while da receiveData");
-
-    if (flag)
-    {
-
+     Serial.println("Entrando no while da receiveData");
+     instruction = Wire.read();
+     if (instruction == 0 )
       servo = Wire.read();
-
-
-      Serial.println("Servo requerido");
-      Serial.println(servo);
-
-      if (servo > 0 & servo < 4)
-      {
-        flag = false;
-      }
-
-      else {
-        flag = true;
-      }
-
-    }
-
-    else
-    {
-
-
+    else if (instruction == 1){
       angulo = Wire.read();
-
-      Serial.println("Angulo Selecionado");
-      Serial.println(angulo);
-
-      if (angulo >= 0 & angulo <= 180)
-      {
-        flag = true;
-        setServo();
-      }
-
-      else
-      {
-        flag = false;
-      }
+      setServo();
+    } 
+     else if (instruction == 2)
+      Tdistance = Wire.read();
+     
     }
 
-  }
+    
 }
 
 
