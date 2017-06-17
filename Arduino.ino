@@ -36,9 +36,9 @@ void setup() {
   servo2.myservo.attach(SERVOPIN_02);
   servo3.myservo.attach(SERVOPIN_03);
   pinMode(SIGPIN_PI_R, INPUT_PULLUP);
-  pinMode(SIGPIN_PI_S, INPUT_PULLUP);
-
-
+  pinMode(SIGPIN_PI_S, OUTPUT);
+  digitalWrite(SIGPIN_PI_S, LOW);
+  
   Wire.begin(SLAVE_ADDRESS);
 
 
@@ -59,6 +59,7 @@ void loop()
   //Serial.println(SIGPIN_PI_R);
   
   while (SIGPIN_PI_R){
+    digitalWrite(SIGPIN_PI_S,not SIGPIN_PI_R);
     Serial.println(servo);
     Serial.println(Tdistance);
     delay(1000);
@@ -72,15 +73,19 @@ void loop()
     duration = 0;
   else
     duration = millis() - lastInterruptTime;
-    
-   velocity = calcVelocity(duration);
+
+  if(Tdistance<0){
+    Tdistance = 0;
+    digitalWrite(SIGPIN_PI_S, HIGH);
+  }
+   
 
 }
 
 unsigned long calcVelocity (unsigned long dur)
 {
   if (duration != 0)
-    return (2*PI*6)/dur*1000;
+    return (2*PI)/dur*1000;
   else
     return 0;
 }
@@ -170,6 +175,7 @@ void setServo() {
 // callback for sending data
 void sendData() {
 
+  velocity = calcVelocity(duration);
 
   Wire.write((int)velocity);
 
@@ -184,7 +190,7 @@ void sendData() {
 void count() 
 {
   c++;
-  Rdistance++;
+  Tdistance-=(2*PI);
   lastInterruptTime = millis();
 
 }
