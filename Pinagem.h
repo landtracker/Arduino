@@ -7,9 +7,10 @@
   const int SERVOPIN_01 = 9;
   const int SERVOPIN_02 = 10;
   const int SERVOPIN_03 = 11;
-  const int SIGPIN_PI_R = 12;
-  const int SIGPIN_PI_S = 13;
-  const int INTPIN = 2;
+  const int SIGPIN_PI_R = 6;
+  const int SIGPIN_PI_S = 7;
+  const int ENCODER1 = 2;
+  const int ENCODER2 = 3;
 
 
 
