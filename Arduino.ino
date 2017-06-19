@@ -11,6 +11,8 @@ int angulo = 0;
 bool instFlag = false;
 int instruction = 0;
 
+int motor1 = 4;
+
 
 int cE = 0;
 unsigned long lastInterruptTimeE = 0;
@@ -21,8 +23,8 @@ unsigned long lastInterruptTimeD = 0;
 unsigned long durationD = 0;
 unsigned long velocityD = 0;
 
-unsigned long distanceE = 0;
-unsigned long distanceD = 0;
+long distanceE = 100;
+long distanceD = 100;
 unsigned long velocity_real = 0;
 
 
@@ -45,7 +47,7 @@ void setup() {
   pinMode(SIGPIN_PI_R, INPUT_PULLUP);
   pinMode(SIGPIN_PI_S, OUTPUT);
   digitalWrite(SIGPIN_PI_S, LOW);
-  
+
   Wire.begin(SLAVE_ADDRESS);
 
 
@@ -66,65 +68,67 @@ void setup() {
 void loop()
 {
   //Serial.println(SIGPIN_PI_R);
-  
-  while (SIGPIN_PI_R){
-    digitalWrite(SIGPIN_PI_S,not SIGPIN_PI_R);
-    //Serial.println(c);
+
+  if (!SIGPIN_PI_R) {
+
+    if ((millis() - lastInterruptTimeD) > 1000)
+      durationD = 0;
+    else
+      durationD = millis() - lastInterruptTimeD;
+
+
+    if ((millis() - lastInterruptTimeE) > 1000)
+      durationE = 0;
+    else
+      durationE = millis() - lastInterruptTimeE;
+
+   
+
+
+    //digitalWrite(SIGPIN_PI_S,not SIGPIN_PI_R);
+    //Serial.println(cD);
     //Serial.println(velocity);
     ///delay(1000);
   }
-  
+
+  //Serial.println("aqui");
+
+
   //delay(10);
   //Serial.println((int)velocity);
   //Serial.println(duration);
 
-  if ((millis() - lastInterruptTimeD) > 1000)
-    durationD = 0;
-  else
-    durationD = millis() - lastInterruptTimeD;
 
-    
-  if ((millis() - lastInterruptTimeE) > 1000)
-    durationE = 0;
-  else
-    durationE = millis() - lastInterruptTimeE;
-
-  if(((distanceE+distanceD)/2)<0){
-    distanceE = 0;
-    distanceD = 0;
-    digitalWrite(SIGPIN_PI_S, HIGH);
-  }
-   
 
 }
 
 unsigned long calcVelocity (unsigned long dur)
 {
   if (dur != 0)
-    return (2000*PI)/dur;
+    return (2000 * PI) / dur;
   else
     return 0;
 }
 
 void receiveData(int byteCount) {
 
- 
+Serial.println("Entrando na receiveData");
   while (Wire.available()) {
-     Serial.println("Entrando no while da receiveData");
-     instruction = Wire.read();
-     if (instruction == 0 )
+    Serial.println("Entrando no while da receiveData");
+    instruction = Wire.read();
+    if (instruction == 0 )
       servo = Wire.read();
-    else if (instruction == 1){
+    else if (instruction == 1) {
       angulo = Wire.read();
       setServo();
-    } 
-     else if (instruction == 2)
-      distanceE = Wire.read();
-      distanceD = Wire.read();
-     
     }
+    else if (instruction == 2)
+      distanceE = Wire.read();
+    distanceD = Wire.read();
 
-    
+  }
+
+
 }
 
 
@@ -192,7 +196,7 @@ void setServo() {
 // callback for sending data
 void sendData() {
 
-  velocity_real = (calcVelocity(durationD) + calcVelocity(durationE))/2;
+  velocity_real = (calcVelocity(durationD) + calcVelocity(durationE)) / 2;
 
   Wire.write((int)velocity_real);
 
@@ -204,29 +208,46 @@ void sendData() {
 
 
 
-void countE() 
+void countE()
 {
   cE++;
-  distanceE-=(2*PI);
-  lastInterruptTimeE = millis();
-  velocityE = calcVelocity(durationE);
-  Serial.println("E");
-  Serial.println(distanceE);
-
+  if (cE>0){
+    distanceE -= (2 * PI);
+    lastInterruptTimeE = millis();
+    velocityE = calcVelocity(durationE);
+    Serial.println("E");
+    Serial.println(distanceE);
+    
+     if (distanceE < 0) {
+        distanceE = 0;
+        digitalWrite(SIGPIN_PI_S, HIGH);
+        delay(10);
+        digitalWrite(SIGPIN_PI_S, LOW);
+        cE = 0;
+      }
+  
+  }
 }
 
-
-void countD() 
+void countD()
 {
   cD++;
-  distanceD-=(2*PI);
-  lastInterruptTimeD = millis();
-  velocityD = calcVelocity(durationD);
-  Serial.println("D");
-  Serial.println(distanceD);
-
+  if (cD > 0){
+    distanceD -= (2 * PI);
+    lastInterruptTimeD = millis();
+    velocityD = calcVelocity(durationD);
+    Serial.println("D");
+    Serial.println(distanceD);
+  
+     if (distanceD < 0) {
+        distanceD = 0;
+        digitalWrite(SIGPIN_PI_S, HIGH);
+        delay(10);
+        digitalWrite(SIGPIN_PI_S, LOW);
+        cD = 0;
+      }
+  }
 }
-
 
 
 
