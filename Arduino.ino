@@ -59,8 +59,8 @@ void setup() {
 
   pinMode(ENCODER1, INPUT_PULLUP);
   pinMode(ENCODER2, INPUT_PULLUP);
-  attachInterrupt(ENCODER1 - 2, countE, FALLING);
-  attachInterrupt(ENCODER2 - 2, countD, FALLING);
+  attachInterrupt(ENCODER1 - 2, countE, CHANGE);
+  attachInterrupt(ENCODER2 - 2, countD, CHANGE);
 
 
 }
@@ -210,44 +210,55 @@ void sendData() {
 
 void countE()
 {
+  noInterrupts();
+  delay(100);
   cE++;
+  Serial.println("E");
   if (cE>0){
     distanceE -= (2 * PI);
     lastInterruptTimeE = millis();
     velocityE = calcVelocity(durationE);
-    Serial.println("E");
+    //Serial.println("E");
+    delay(100);
     Serial.println(distanceE);
     
      if (distanceE < 0) {
         distanceE = 0;
         digitalWrite(SIGPIN_PI_S, HIGH);
-        delay(10);
+        delay(100);
         digitalWrite(SIGPIN_PI_S, LOW);
         cE = 0;
       }
   
   }
+  delay(100);
+  interrupts();
 }
 
 void countD()
 {
+  noInterrupts();
+  delay(100);
+  Serial.println("D");
   cD++;
   if (cD > 0){
     distanceD -= (2 * PI);
     lastInterruptTimeD = millis();
     velocityD = calcVelocity(durationD);
-    Serial.println("D");
+    //Serial.println("D");
+    delay(100);
     Serial.println(distanceD);
   
      if (distanceD < 0) {
         distanceD = 0;
         digitalWrite(SIGPIN_PI_S, HIGH);
-        delay(10);
+        delay(100);
         digitalWrite(SIGPIN_PI_S, LOW);
         cD = 0;
       }
   }
+  delay(100);
+  interrupts();
 }
-
 
 
